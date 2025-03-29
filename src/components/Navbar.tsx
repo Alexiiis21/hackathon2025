@@ -81,7 +81,7 @@ export default function Navbar({
                         <UserCircle className="h-7 w-7 text-zinc-700" />
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
+                    <DropdownMenuContent align="end" className="bg-white z-50">
                       <DropdownMenuItem className="cursor-pointer">
                         <MoonIcon className="mr-2 h-4 w-4 text-zinc-500" />
                         Modo Oscuro

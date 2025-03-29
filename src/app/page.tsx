@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { AlarmClock, Building2, Leaf } from "lucide-react";
 import MaxWidthWrapper from "@/components/MaxWidthWrapper";
+import UsersNavbar from "@/components/UsersNavbar";
 
 const perks = [
     {
@@ -141,6 +142,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col items-center p-6 bg-white text-black">
+    <UsersNavbar />
+
       <main className="">
 <MaxWidthWrapper>
 
