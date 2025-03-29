@@ -7,24 +7,66 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { AlarmClock, Building2, Leaf } from "lucide-react";
+import MaxWidthWrapper from "@/components/MaxWidthWrapper";
 
-// Datos mock para simular respuestas del servidor
+const perks = [
+    {
+      name: 'Eco-friendly',
+      Icon: Leaf,
+      description:
+        'Contribuye al cuidado del medio ambiente optimizando las rutas de recolección y reduciendo emisiones de CO2.',
+    },
+    {
+      name: 'Ciudad Limpia',
+      Icon: Building2,
+      description:
+        'Mantén tu comunidad limpia reportando problemas rápidamente y facilitando una respuesta inmediata.',
+    },
+    {
+      name: 'Respuesta Rápida',
+      Icon: AlarmClock,
+      description:"Sistema de alertas que garantiza la atención inmediata de los contenedores que requieren mantenimiento urgente."
+    },
+  ]
+
 const MOCK_REPORTS = [
-  { id: 1, title: "Contenedor dañado", description: "La tapa no cierra correctamente", imageUrl: "/mock-images/container1.jpg" },
-  { id: 2, title: "Basura fuera del contenedor", description: null, imageUrl: "/mock-images/container2.jpg" },
-  { id: 3, title: "Contenedor lleno", description: "Necesita vaciarse urgentemente", imageUrl: null }
+  { id: 1, containerID: "CONT-2023-A45", problemType: "Contenedor dañado", description: "La tapa no cierra correctamente", imageUrl: "/mock-images/container1.jpg" },
+  { id: 2, containerID: "CONT-2023-B78", problemType: "Basura fuera del contenedor", description: null, imageUrl: "/mock-images/container2.jpg" },
+  { id: 3, containerID: "CONT-2023-C12", problemType: "Contenedor lleno", description: "Necesita vaciarse urgentemente", imageUrl: null }
 ];
+
+// Tipos de problemas predefinidos
+const PROBLEM_TYPES = [
+  "Contenedor lleno",
+  "Contenedor dañado",
+  "Basura fuera del contenedor",
+  "Mal olor",
+  "Contenedor bloqueado",
+  "Otro"
+];
+
+// ID de contenedor mock (simula ser escaneado de un QR)
+const MOCK_CONTAINER_ID = "CONT-2024-XYZ789";
 
 export default function Home() {
   // Estado del formulario
-  const [title, setTitle] = useState("");
+  const [containerID, setContainerID] = useState(MOCK_CONTAINER_ID);
+  const [problemType, setProblemType] = useState("");
   const [description, setDescription] = useState("");
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [mockReport, setMockReport] = useState<typeof MOCK_REPORTS[0] | null>(null);
+  const [mockReport, setMockReport] = useState<(typeof MOCK_REPORTS[0] & { containerID: string, problemType: string }) | null>(null);
 
   // Manejar cambios en la imagen seleccionada
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,14 +93,18 @@ export default function Home() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!title) {
-      toast.error("Por favor ingresa un título");
+    if (!containerID) {
+      toast.error("Por favor ingresa un ID de contenedor");
+      return;
+    }
+    
+    if (!problemType) {
+      toast.error("Por favor selecciona un tipo de problema");
       return;
     }
     
     setIsSubmitting(true);
     
-    // Simular una llamada a API con un tiempo de espera
     setTimeout(() => {
       // Seleccionar un reporte mock aleatorio como respuesta
       const randomReport = MOCK_REPORTS[Math.floor(Math.random() * MOCK_REPORTS.length)];
@@ -66,11 +112,10 @@ export default function Home() {
       // Combinar datos del formulario con respuesta mock
       const submittedReport = {
         ...randomReport,
-        title: title, // Usar el título ingresado por el usuario
-        description: description || randomReport.description || "", // Asegurar que no sea null
-        // Si el usuario subió una imagen, usamos la URL de previsualización,
-        // si no, usamos la del reporte mock
-        imageUrl: imagePreview || randomReport.imageUrl || null // Asegurar que sea null si no hay imagen
+        containerID: containerID,
+        problemType: problemType,
+        description: description || randomReport.description || "", 
+        imageUrl: imagePreview || randomReport.imageUrl || null
       };
       
       setMockReport(submittedReport);
@@ -82,7 +127,8 @@ export default function Home() {
 
   // Reiniciar el formulario
   const handleReset = () => {
-    setTitle("");
+    setContainerID(MOCK_CONTAINER_ID);
+    setProblemType("");
     setDescription("");
     if (imagePreview) {
       URL.revokeObjectURL(imagePreview);
@@ -95,11 +141,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col items-center p-6 bg-white text-black">
-      <header className="w-full max-w-2xl flex justify-center items-center py-6">
-        <h1 className="text-3xl font-bold text-emerald-600">Clear<span className="text-black">Route</span></h1>
-      </header>
+      <main className="">
+<MaxWidthWrapper>
 
-      <main className="w-full max-w-md">
         {!submitted ? (
           <Card>
             <CardHeader>
@@ -108,17 +152,43 @@ export default function Home() {
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <label htmlFor="title" className="block font-medium">
-                    Título <span className="text-red-500">*</span>
+                  <label htmlFor="containerID" className="block font-medium">
+                    ID del Contenedor <span className="text-red-500">*</span>
                   </label>
-                  <Input
-                    id="title"
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="containerID"
+                      type="text"
+                      value={containerID}
+                      onChange={(e) => setContainerID(e.target.value)}
+                      required
+                      placeholder="ID del contenedor (escaneado)"
+                      className="flex-1"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500">Este campo se completará automáticamente al escanear el código QR</p>
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="problemType" className="block font-medium">
+                    Tipo de Problema <span className="text-red-500">*</span>
+                  </label>
+                  <Select
                     required
-                    placeholder="Ej: Contenedor dañado"
-                  />
+                    value={problemType}
+                    onValueChange={setProblemType}
+                  >
+                    <SelectTrigger id="problemType">
+                      <SelectValue placeholder="Selecciona un problema" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white">
+                      {PROBLEM_TYPES.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
@@ -163,14 +233,14 @@ export default function Home() {
                     id="description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Describe el problema..."
+                    placeholder="Proporciona detalles adicionales sobre el problema..."
                     rows={4}
                   />
                 </div>
 
                 <Button
                   type="submit"
-                  className="w-full bg-emerald-600 hover:bg-emerald-700"
+                  className="w-full bg-green-700 hover:bg-emerald-700 text-white"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Enviando..." : "Enviar Reporte"}
@@ -187,14 +257,19 @@ export default function Home() {
               {mockReport && (
                 <div className="space-y-4">
                   <div>
-                    <h3 className="font-semibold">Título:</h3>
-                    <p>{mockReport.title}</p>
+                    <h3 className="font-semibold">ID del Contenedor:</h3>
+                    <p className="font-mono bg-gray-100 p-2 rounded">{mockReport.containerID}</p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-semibold">Tipo de Problema:</h3>
+                    <p>{mockReport.problemType}</p>
                   </div>
                   
                   {mockReport.description && (
                     <div>
                       <h3 className="font-semibold">Descripción:</h3>
-                      <p>{mockReport.description}</p>
+                      <p className="bg-gray-50 p-2 rounded">{mockReport.description}</p>
                     </div>
                   )}
                   
@@ -224,11 +299,30 @@ export default function Home() {
             </CardFooter>
           </Card>
         )}
-      </main>
+          <div className='grid grid-cols-1 gap-y-12 sm:grid-cols-2 sm:gap-x-6 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-0 pt-10 pb-20'>
+            {perks.map((perk) => (
+              <div
+                key={perk.name}
+                className='text-center md:flex md:items-start md:text-left lg:block lg:text-center'>
+                <div className='md:flex-shrink-0 flex justify-center'>
+                  <div className='h-16 w-16 flex items-center justify-center rounded-full bg-green-100 text-green-800'>
+                    {<perk.Icon className='w-1/3 h-1/3' />}
+                  </div>
+                </div>
 
-      <footer className="mt-8 text-center text-sm text-gray-500">
-        <p>© 2025 ClearRoute - Todos los derechos reservados</p>
-      </footer>
+                <div className='mt-6 md:ml-4 md:mt-0 lg:ml-0 lg:mt-6'>
+                  <h3 className='text-base font-medium text-gray-900'>
+                    {perk.name}
+                  </h3>
+                  <p className='mt-3 text-sm text-muted-foreground'>
+                    {perk.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </MaxWidthWrapper>
+      </main>
     </div>
   );
 }
