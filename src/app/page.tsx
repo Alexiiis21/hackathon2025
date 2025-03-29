@@ -19,7 +19,8 @@ export default function Home() {
   // Estado del formulario
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [setImage] = useState<File | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
